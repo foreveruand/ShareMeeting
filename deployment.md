@@ -1,12 +1,14 @@
-# 自有服务器部署指南
+# 本地服务器部署指南
 
-本文档部署当前 `dev` 分支中的 Node.js API 和微信小程序。生产环境需要一个已备案、可访问的 HTTPS 域名，例如 `meeting-api.example.com`。
+本文档部署当前 `dev` 分支中的 Node.js API 和微信小程序。以 `meeting-api.example.com` 为示例，Node.js 服务仅监听 `127.0.0.1:4000`，由 OpenResty 通过公网 `443` 端口提供 HTTPS。
+
+如果现有 OpenResty 使用 SNI 将公网 `443` 转发到本机 `8443`，本项目站点配置应监听 `127.0.0.1:8443`，不要再创建直接监听 `443 ssl` 的站点。若部署环境不同，请按现有 OpenResty 架构调整监听地址。
 
 ## 前置条件
 
 - Linux 服务器，Node.js 20 或更高版本。
 - 已解析到服务器的域名，以及有效 TLS 证书。
-- Nginx、Git 和 SQLite 命令行工具。
+- OpenResty、Git 和 SQLite 命令行工具。
 - 微信小程序的 AppID 与 AppSecret。
 
 服务端使用 SQLite，不需要额外安装 MySQL 或 Redis。`better-sqlite3` 在没有预编译二进制时会编译本地模块，因此服务器还应具备编译工具链，例如 Debian/Ubuntu 的 `build-essential` 和 `python3`。
@@ -29,7 +31,9 @@ sudo chown -R sharemeet:sharemeet /opt/share-meeting
 在 `/opt/share-meeting/.env` 创建配置。该文件已被 Git 忽略，权限应限制为管理员可读：
 
 ```dotenv
-PORT=3000
+PUBLIC_BASE_URL=https://meeting-api.example.com
+HOST=127.0.0.1
+PORT=4000
 WECHAT_APP_ID=wx0000000000000000
 WECHAT_APP_SECRET=replace-with-the-real-app-secret
 INITIAL_ADMIN_USERNAME=meeting-admin
@@ -44,75 +48,35 @@ sudo chmod 600 /opt/share-meeting/.env
 
 `INITIAL_ADMIN_USERNAME` 和 `INITIAL_ADMIN_PASSWORD` 仅在数据库中尚无管理员时生效。不要提交 `.env`，也不要把 AppSecret 写入小程序代码。
 
-服务端仅读取进程环境变量，不会自动读取 `.env`。使用 systemd 的 `EnvironmentFile` 注入这些配置。创建 `/etc/systemd/system/share-meeting.service`：
-
-```ini
-[Unit]
-Description=ShareMeeting API
-After=network.target
-
-[Service]
-Type=simple
-User=sharemeet
-Group=sharemeet
-WorkingDirectory=/opt/share-meeting
-EnvironmentFile=/opt/share-meeting/.env
-ExecStart=/usr/bin/node server/src/server.js
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-使用 `which node` 确认 Node.js 路径，并按需修改 `ExecStart`。随后启动服务：
+服务端仅读取进程环境变量，不会自动读取 `.env`。仓库中的 `deploy/systemd/share-meeting.service` 使用 systemd 的 `EnvironmentFile` 注入这些配置：
 
 ```bash
+sudo install -Dm644 deploy/systemd/share-meeting.service /etc/systemd/system/share-meeting.service
+sudo systemd-analyze verify /etc/systemd/system/share-meeting.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now share-meeting
 sudo systemctl status share-meeting
 sudo journalctl -u share-meeting -f
 ```
 
+如果运行账号、Node.js 的安装目录或代码目录不同，先修改该 unit 的 `User`、`Group`、`ExecStart`、`WorkingDirectory` 和 `EnvironmentFile`。
+
 ## 配置 HTTPS 和反向代理
 
-Node.js 服务默认监听端口 3000。请限制该端口仅允许本机访问，公网流量通过 Nginx 的 HTTPS 入口转发。
+Node.js 服务监听 `127.0.0.1:4000`，不会直接暴露到公网。OpenResty 配置复用现有的 `ssl.conf` 和证书，并使用 `meeting-api.*` 匹配目标域名。
 
-在 `/etc/nginx/sites-available/share-meeting` 创建站点配置，并将域名替换为实际值：
-
-```nginx
-server {
-    listen 80;
-    server_name meeting-api.example.com;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name meeting-api.example.com;
-
-    ssl_certificate /etc/letsencrypt/live/meeting-api.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/meeting-api.example.com/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-启用站点并申请证书：
+安装仓库中的站点配置：
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/share-meeting /etc/nginx/sites-enabled/share-meeting
-sudo nginx -t
-sudo systemctl reload nginx
-sudo certbot --nginx -d meeting-api.example.com
+sudo install -Dm644 deploy/openresty/share-meeting.conf \
+  /etc/openresty/sites-enabled/share-meeting.conf
+sudo openresty -t
+sudo systemctl reload openresty
 ```
 
-首次申请证书前，保留仅监听 80 端口的配置，或由 Certbot 自动补充 TLS 配置。确认服务器防火墙对外开放 80 和 443，且不对外开放 3000。
+证书路径和 OpenResty 配置目录因安装方式而异，应确保 TLS 证书覆盖目标域名。确认服务器防火墙对外开放 80 和 443，且不对外开放 4000。
+
+DNS 应将 `meeting-api.example.com` 解析到服务器公网地址。首次申请证书时可暂时只启用 80 端口的重定向站点，证书部署完成后再启用 8443 的 HTTPS 站点。
 
 ## 配置微信小程序
 

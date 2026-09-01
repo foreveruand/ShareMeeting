@@ -27,9 +27,10 @@ function startServer() {
       appSecret: getRequiredEnvironment("WECHAT_APP_SECRET"),
     }),
   });
-  const port = Number(process.env.PORT || 3000);
-  app.listen(port, () => {
-    console.log(`ShareMeeting API is listening on port ${port}.`);
+  const host = process.env.HOST || "127.0.0.1";
+  const port = Number(process.env.PORT || 4000);
+  app.listen(port, host, () => {
+    console.log(`ShareMeeting API is listening on ${host}:${port}.`);
   });
 }
 
