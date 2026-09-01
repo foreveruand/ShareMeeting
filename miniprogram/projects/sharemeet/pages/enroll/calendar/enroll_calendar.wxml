@@ -9,7 +9,7 @@
 	<view class="list padding-project">
 		<view wx:if="{{list===null}}" class="load loading text-l text-grey"></view>
 		<text wx:elif="{{list.length==0}}" class="no-project icon-emoji text-l text-grey"> 本日暂无预定记录~</text>
-		<view class="item card-project shadow-project" wx:for="{{list}}" wx:key="key" bindtap="url" data-url="../my_join_detail/enroll_my_join_detail?id={{item._id}}">
+		<view class="item card-project shadow-project" wx:for="{{list}}" wx:key="key">
 			<view wx:if="{{index%4==0}}" class="left bg-blue bg-project"></view>
 			<view wx:elif="{{index%4==1}}" class="left bg-green"></view>
 			<view wx:elif="{{index%4==2}}" class="left bg-orange"></view>

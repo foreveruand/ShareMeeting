@@ -12,3 +12,7 @@ $RECYCLE.BIN/
 
 # Node.js
 node_modules/
+
+# Self-hosted server runtime data and secrets
+.env
+server/data/

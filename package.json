@@ -1,0 +1,19 @@
+{
+  "name": "share-meeting-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted API for the ShareMeeting Mini Program",
+  "main": "server/src/server.js",
+  "scripts": {
+    "start": "node server/src/server.js",
+    "test": "node --test server/test/**/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.0",
+    "express": "^5.2.1",
+    "multer": "^2.0.2"
+  }
+}

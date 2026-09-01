@@ -1,4 +1,8 @@
 module.exports = {
+	// 使用自有 HTTPS 服务时设为 true。API 域名需要在小程序后台配置。
+	USE_SELF_HOSTED: true,
+	API_BASE_URL: 'https://meeting-api.example.com',
+
 	//### 环境相关 
 	CLOUD_ID: 'dev-5gf0o85o226fad1d', //云服务id ,本地测试环境 
 
@@ -10,7 +14,7 @@ module.exports = {
 	IS_SUB: false, //分包模式 
 	IS_DEMO: false, //是否演示版  
 
-	MOBILE_CHECK: false, //手机号码是否真实性校验
+	MOBILE_CHECK: false, //预约表单中的手机号只允许手动填写
 
 
 	//#################     

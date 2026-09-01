@@ -2,6 +2,7 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const timeHelper = require('../../../../../helper/time_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
+const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 
 Page({
 	/**
@@ -20,6 +21,7 @@ Page({
 	 */
 	onLoad: async function (options) {
 		ProjectBiz.initPage(this);
+		if (!await PassportBiz.loginMustBackWin(this)) return;
 	},
 
 	_loadList: async function () {

@@ -25,7 +25,7 @@ Page({
 
 		if (!pageHelper.getOptions(this, options)) return;
 
-		//	if (!await PassportBiz.loginMustBackWin(this)) return;
+		if (!await PassportBiz.loginMustBackWin(this)) return;
 
 		if (options && options.day) {
 			this.setData({ day: options.day });

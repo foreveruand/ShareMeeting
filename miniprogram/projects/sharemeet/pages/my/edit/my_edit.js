@@ -3,7 +3,6 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const validate = require('../../../../../helper/validate.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const projectSetting = require('../../../public/project_setting.js');
-const setting = require('../../../../../setting/setting.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 
 Page({
@@ -14,8 +13,7 @@ Page({
 		isLoad: false,
 		isEdit: true,
 
-		userRegCheck: projectSetting.USER_REG_CHECK,
-		mobileCheck: setting.MOBILE_CHECK
+		userRegCheck: projectSetting.USER_REG_CHECK
 	},
 
 	/**
@@ -44,7 +42,6 @@ Page({
 			fields: projectSetting.USER_FIELDS,
 
 			formName: user.USER_NAME,
-			formMobile: user.USER_MOBILE,
 			formForms: user.USER_FORMS
 		})
 	},
@@ -91,11 +88,6 @@ Page({
 	onReachBottom: function () {
 
 	},
-
-	bindGetPhoneNumber: async function (e) {
-		await PassportBiz.getPhone(e, this);
-	},
-
 
 	bindSubmitTap: async function (e) {
 		try {

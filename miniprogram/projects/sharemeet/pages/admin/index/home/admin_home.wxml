@@ -32,63 +32,12 @@
 	<view class="comm-list grid col-3">
 		<view class="item" bindtap="url" data-url="../../user/list/admin_user_list"> <text class="icon-group_fill text-green"></text> <text class="text-black">用户管理</text>
 		</view>
-		<view class="item" bindtap="url" data-url="../../news/list/admin_news_list"> <text class="icon-form text-darkgreen"></text> <text class="text-black">公告管理</text>
-		</view>
 		<view class="item" bindtap="url" data-url="../../enroll/list/admin_enroll_list"> <text class="icon-friendadd text-purple"></text> <text class="text-black">会议室管理</text>
 		</view> 
 	</view>
 
 
 	<!-- BOTTOM begin -->
-	<view class="comm-list menu  margin-top">
-
-		<view class="item arrow" bindtap="url" data-url="../../setup/about_list/admin_setup_about_list">
-			<view class="content">
-				<text class="icon-edit text-darkgreen"></text>
-				<text class="text-black">编辑 - 关于我们</text>
-			</view>
-		</view>
-
-
-		<view class="item arrow" bindtap="url" data-url="../../setup/qr/admin_setup_qr">
-			<view class="content">
-				<text class="icon-qr_code text-mauve"></text>
-				<text class="text-black">小程序二维码</text>
-			</view>
-		</view>
-	</view>
-
-	<view class="comm-list menu">
-		<view wx:if="{{isSuperAdmin}}" class="item arrow" bindtap="url" data-url="../../mgr/list/admin_mgr_list">
-			<view class="content">
-				<text class="icon-profile text-red"></text>
-				<text class="text-black">系统管理员管理</text>
-			</view>
-		</view>
-		<view class="item arrow" bindtap="url" data-url="../../mgr/pwd/admin_mgr_pwd">
-			<view class="content">
-				<text class="icon-lock text-orange"></text>
-				<text class="text-black">修改我的管理员密码</text>
-			</view>
-		</view>
-		<view class="item arrow" bindtap="url" data-url="../../mgr/log/admin_log_list">
-			<view class="content">
-				<text class="icon-footprint text-brown"></text>
-				<text class="text-black">管理员操作日志</text>
-			</view>
-		</view>
-
-	</view>
-
-	<view class="comm-list menu margin-bottom-xl">
-		<view   class="item arrow" bindtap="bindMoreTap">
-			<view class="content">
-				<text class="icon-settings text-grey"></text>
-				<text class="text-black">更多设置</text>
-			</view>
-		</view>
-	</view>
-
 	<!-- BOTTOM END -->
 	<button bindtap="bindExitTap" class="btn-admin">退出登录</button>
 

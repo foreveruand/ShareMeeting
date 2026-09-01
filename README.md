@@ -32,6 +32,12 @@
 
 - 安装手册见源码包里的word文档
 
+### 自有服务器部署
+
+- 复制 `.env.example` 为 `.env`，配置微信小程序的 `WECHAT_APP_ID`、`WECHAT_APP_SECRET` 和初始管理员账号。
+- 安装依赖后运行 `npm start`。生产环境必须使用 HTTPS，并将服务地址填入 `miniprogram/setting/setting.js` 的 `API_BASE_URL`。
+- 自有服务器模式提供会议室管理、预约记录管理、微信登录和 SQLite 数据存储；小程序管理员可创建、编辑、启停或删除会议室，并处理预约记录。
+
 
 
 
@@ -51,7 +57,7 @@
  
 
 ## 后台管理系统截图 
-- 后台超级管理员默认账号:admin，密码123456，请登录后台后及时修改密码和创建普通管理员。
+- 初始管理员账号和密码由 `.env` 中的 `INITIAL_ADMIN_USERNAME`、`INITIAL_ADMIN_PASSWORD` 配置，仅在数据库首次创建管理员时生效。
 ![image](https://user-images.githubusercontent.com/89234210/194038812-8df71548-15e6-4476-bc53-b1d7a4a3024c.png)
 ![image](https://user-images.githubusercontent.com/89234210/194038818-8e9d8af2-7bfa-4a51-802b-29fcde13e0f7.png)
 ![image](https://user-images.githubusercontent.com/89234210/194038823-617f2262-7c7e-432d-8371-2071b556b24e.png)
@@ -59,6 +65,4 @@
 ![image](https://user-images.githubusercontent.com/89234210/194038840-26720be8-5a8e-4f83-bb71-0fe4c95813cd.png)
 
 ![image](https://user-images.githubusercontent.com/89234210/194038795-c6aa41f8-a0f1-4be4-accf-3c29c7834c9f.png)
-
-
 

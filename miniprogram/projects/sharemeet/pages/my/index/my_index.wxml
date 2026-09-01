@@ -32,26 +32,13 @@
 				</view>
 			</view>
 
-			<view class="item arrow" bindtap="url" data-url="../../enroll/my_join_list/enroll_my_join_list">
+			<view wx:if="{{user&&user.USER_STATUS==1}}" class="item arrow" bindtap="url" data-url="../../enroll/my_join_list/enroll_my_join_list">
 				<view class="content">
 					<text class="icon-evaluate my-icon-project text-orange"></text>
 					<text class="text-black">我预定的会议室</text>
 				</view>
 			</view> 
 
-			<view class="item arrow" bindtap="url" data-url="../fav/my_fav">
-				<view class="content">
-					<text class="icon-favor my-icon-project text-green"></text>
-					<text class="text-black">我的收藏</text>
-				</view>
-			</view>
-
-			<view class="item arrow" bindtap="url" data-url="../foot/my_foot">
-				<view class="content">
-					<text class="icon-footprint my-icon-project text-blue"></text>
-					<text class="text-black">历史浏览</text>
-				</view>
-			</view>
 		</view>
 		<!--base end -->
 
@@ -62,13 +49,6 @@
 				<view class="content">
 					<text class="icon-settings my-icon-project text-grey"></text>
 					<text class="text-red text-bold ">系统后台管理<text class="text-grey text-normal">（点击试用）</text></text>
-				</view>
-			</view>
-
-			<view class="item arrow" bindtap="url" data-url="../../about/index/about_index?key=SETUP_CONTENT_ABOUT">
-				<view class="content">
-					<text class="icon-service my-icon-project text-purple"></text>
-					<text class="text-black">关于我们</text>
 				</view>
 			</view>
 

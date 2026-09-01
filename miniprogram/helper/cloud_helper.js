@@ -73,9 +73,6 @@ function callCloud(route, params = {}, options) {
 	if (helper.isDefined(options) && helper.isDefined(options.hint))
 		hint = options.hint;
 
-	if (helper.isDefined(options) && helper.isDefined(options.doFail))
-		doFail = options.doFail;
-
 	if (hint) {
 		if (title == 'bar')
 			wx.showNavigationBarLoading();
@@ -94,74 +91,84 @@ function callCloud(route, params = {}, options) {
 	} else {
 		//正常用户
 		let user = cacheHelper.get(constants.CACHE_TOKEN);
-		if (user && user.id) token = user.id;
+		if (user && user.accessToken) token = user.accessToken;
 	}
 
 	return new Promise(function (resolve, reject) {
+		let isSelfHosted = setting.USE_SELF_HOSTED;
+		let requestData = isSelfHosted ? { route, params } : {
+			route: route,
+			token,
+			PID: pageHelper.getPID(),
+			params
+		};
 
-		let PID = pageHelper.getPID();
-
-		wx.cloud.callFunction({
-			name: 'mcloud',
-			data: {
-				route: route,
-				token,
-				PID,
-				params
+		let requestOptions = {
+			method: 'POST',
+			data: requestData,
+			header: {
+				'content-type': 'application/json'
 			},
 			success: function (res) {
-				if (res.result.code == CODE.LOGIC || res.result.code == CODE.DATA) {
-					console.log(res)
+				let result = isSelfHosted ? res.data : res.result;
+				if (!result) {
+					reject({ code: CODE.SVR, msg: '服务器返回数据无效' });
+					return;
+				}
+
+				if (result.code == CODE.LOGIC || result.code == CODE.DATA || result.code == 1401 || result.code == 1403) {
+					console.log(result)
 					// 逻辑错误&数据校验错误 
 					if (hint) {
 						wx.showModal({
 							title: '温馨提示',
-							content: res.result.msg,
+							content: result.msg,
 							showCancel: false
 						});
 					}
 
-					reject(res.result);
+					reject(result);
 					return;
-				} else if (res.result.code == CODE.ADMIN_ERROR) {
+				} else if (result.code == CODE.ADMIN_ERROR) {
 					// 后台登录错误
+					cacheHelper.remove(constants.CACHE_ADMIN);
 					wx.reLaunch({
 						url: pageHelper.fmtURLByPID('/pages/admin/index/login/admin_login'),
 					});
-					//reject(res.result);
+					reject(result);
 					return;
-				} else if (res.result.code != CODE.SUCC) {
+				} else if (result.code != CODE.SUCC) {
 					if (hint) {
 						wx.showModal({
 							title: '温馨提示',
-							content: '系统开小差了，请稍后重试',
+							content: result.msg || '系统开小差了，请稍后重试',
 							showCancel: false
 						});
 					}
-					reject(res.result);
+					reject(result);
 					return;
 				}
 
-				resolve(res.result);
+				resolve(result);
 			},
 			fail: function (err) {
 				if (hint) {
 					console.log(err)
-					if (err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('Environment not found')) {
+					if (!isSelfHosted && err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('Environment not found')) {
 						wx.showModal({
 							title: '',
 							content: '未找到云环境ID，请按手册检查前端配置文件setting.js的配置项【CLOUD_ID】或咨询作者微信cclinux0730',
 							showCancel: false
 						});
 
-					} else if (err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('FunctionName')) {
+					} else if (!isSelfHosted && err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('FunctionName')) {
 						wx.showModal({
 							title: '',
 							content: '云函数未创建或者未上传，请参考手册或咨询作者微信cclinux0730',
 							showCancel: false
 						});
 
-					} else if (err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('performed in the current function state')) {
+					} else if (!isSelfHosted && err && err.errMsg && err.errMsg.includes('-501000') && err.errMsg.includes('performed in the current function state')) {
 						wx.showModal({
 							title: '',
 							content: '云函数正在上传中或者上传有误，请稍候',
@@ -174,7 +181,7 @@ function callCloud(route, params = {}, options) {
 							showCancel: false
 						});
 				}
-				reject(err.result);
+				reject(err.result || err);
 				return;
 			},
 			complete: function (res) {
@@ -185,6 +192,42 @@ function callCloud(route, params = {}, options) {
 						wx.hideLoading();
 				}
 				// complete
+			}
+		};
+
+		if (isSelfHosted) {
+			requestOptions.url = setting.API_BASE_URL + '/api/routes';
+			if (token) requestOptions.header.Authorization = 'Bearer ' + token;
+			wx.request(requestOptions);
+		} else {
+			wx.cloud.callFunction({
+				name: 'mcloud',
+				data: requestData,
+				success: requestOptions.success,
+				fail: requestOptions.fail,
+				complete: requestOptions.complete
+			});
+		}
+	});
+}
+
+function loginWithWechatCode(code) {
+	return new Promise(function (resolve, reject) {
+		wx.request({
+			url: setting.API_BASE_URL + '/api/auth/wechat-login',
+			method: 'POST',
+			data: { code },
+			header: {
+				'content-type': 'application/json'
+			},
+			success: function (res) {
+				if (res.data && res.data.code == CODE.SUCC)
+					resolve(res.data);
+				else
+					reject(res.data || { code: CODE.SVR, msg: '微信登录失败' });
+			},
+			fail: function (err) {
+				reject(err);
 			}
 		});
 	});
@@ -269,6 +312,7 @@ async function dataList(that, listName, route, params, options, isReverse = fals
 
 async function getTempFileURLOne(fileID) {
 	if (!fileID) return '';
+	if (setting.USE_SELF_HOSTED) return fileID;
 
 	let result = await wx.cloud.getTempFileURL({
 		fileList: [fileID],
@@ -279,6 +323,7 @@ async function getTempFileURLOne(fileID) {
 }
 
 async function transTempPics(imgList, dir, id, prefix = '') {
+	if (setting.USE_SELF_HOSTED) return imgList;
 	if (setting.IS_DEMO) return imgList; 
 
 	if (prefix && !prefix.endsWith('_')) prefix += '_';
@@ -367,6 +412,7 @@ async function transCoverTempPics(imgList, dir, id, route) {
 }
 
 async function transFormsTempPics(forms, dir, id, route) {
+	if (setting.USE_SELF_HOSTED) return forms;
 	wx.showLoading({
 		title: '提交中...',
 		mask: true
@@ -438,6 +484,7 @@ module.exports = {
 	callCloudSumbit,
 	callCloudData,
 	callCloudSumbitAsync,
+	loginWithWechatCode,
 	transTempPics,
 	transRichEditorTempPics,
 	transCoverTempPics,

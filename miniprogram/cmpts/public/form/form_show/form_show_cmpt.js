@@ -1,10 +1,8 @@
 const pageHelper = require('../../../../helper/page_helper.js');
 const helper = require('../../../../helper/helper.js');
-const cloudHelper = require('../../../../helper/cloud_helper.js');
 const cacheHelper = require('../../../../helper/cache_helper.js');
 const formSetHelper = require('../form_set_helper.js');
 const validate = require('../../../../helper/validate.js');
-const setting = require('../../../../setting/setting.js');
 
 const CACHE_FORM_SHOW_KEY = 'FORM_SHOW_CMPT';
 const CACHE_FORM_SHOW_TIME = 86400 * 365;
@@ -58,8 +56,7 @@ Component({
 	data: {
 		cacheName: '',
 		isLoad: false,
-		showCheckModal: false,
-		mobileCheck: setting.MOBILE_CHECK
+		showCheckModal: false
 	},
 
 	/**
@@ -364,36 +361,6 @@ Component({
 			let idx = pageHelper.dataset(e, 'idx');
 			let val = e.detail.value;
 			this._setForm(idx, val);
-		},
-
-		bindGetPhoneNumber: async function (e) {
-			if (e.detail.errMsg == "getPhoneNumber:ok") {
-
-				let cloudID = e.detail.cloudID;
-				let params = {
-					cloudID
-				};
-				let opt = {
-					title: '手机验证中'
-				};
-				await cloudHelper.callCloudSumbit('passport/phone', params, opt).then(res => {
-					let phone = res.data;
-					if (!phone || phone.length < 11)
-						wx.showToast({
-							title: '手机号码获取失败，请重新绑定手机号码',
-							icon: 'none',
-							duration: 2000
-						});
-					else {
-						let idx = pageHelper.dataset(e, 'idx');
-						this._setForm(idx, phone);
-					}
-				});
-			} else
-				wx.showToast({
-					title: '手机号码获取失败，请重新绑定手机号码',
-					icon: 'none'
-				});
 		},
 
 		checkForms: function () {

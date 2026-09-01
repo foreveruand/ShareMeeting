@@ -10,6 +10,7 @@ const cloudHelper = require('../../helper/cloud_helper.js');
 const pageHelper = require('../../helper/page_helper.js');
 const helper = require('../../helper/helper.js');
 const constants = require('../constants.js');
+const setting = require('../../setting/setting.js');
 
 class PassportBiz extends BaseBiz {
 
@@ -62,13 +63,12 @@ class PassportBiz extends BaseBiz {
 	static getStatus() {
 		let token = cacheHelper.get(constants.CACHE_TOKEN);
 		if (!token) return -1;
-		return token.status || -1;
+		return helper.isDefined(token.status) ? token.status : -1;
 	}
 
 	// 是否登录 
 	static isLogin() {
-		let id = PassportBiz.getUserId();
-		return (id.length > 0) ? true : false;
+		return PassportBiz.getUserId().length > 0 && PassportBiz.getStatus() == 1;
 	}
 
 	static loginStatusHandler(method, status) {
@@ -101,7 +101,7 @@ class PassportBiz extends BaseBiz {
 	// 登录判断及处理
 	static async loginCheck(mustLogin = false, method = 'back', title = '', that = null) {
 		let token = cacheHelper.get(constants.CACHE_TOKEN);
-		if (token && method != 'must') {
+		if (token && token.status == 1 && method != 'must') {
 			if (that)
 				that.setData({
 					isLogin: true
@@ -117,10 +117,21 @@ class PassportBiz extends BaseBiz {
 			title: title || '登录中',
 		};
 
-		let res = await cloudHelper.callCloudSumbit('passport/login', {}, opt).then(result => {
+		let loginRequest = setting.USE_SELF_HOSTED
+			? new Promise((resolve, reject) => {
+				wx.login({
+					success: result => result.code ? resolve(cloudHelper.loginWithWechatCode(result.code)) : reject(result),
+					fail: reject
+				});
+			})
+			: cloudHelper.callCloudSumbit('passport/login', {}, opt);
+
+		let res = await loginRequest.then(result => {
 			PassportBiz.clearToken();
-			if (result && helper.isDefined(result.data.token) && result.data.token && result.data.token.status == 1) {
-				PassportBiz.setToken(result.data.token);
+			let loginToken = result && result.data ? result.data.token : null;
+			if (loginToken && loginToken.accessToken) PassportBiz.setToken(loginToken);
+
+			if (loginToken && loginToken.status == 1) {
 
 				if (that) that.setData({
 					isLogin: true
@@ -128,8 +139,8 @@ class PassportBiz extends BaseBiz {
 
 				return true;
 			}
-			else if (mustLogin && result && helper.isDefined(result.data.token) && result.data.token && (result.data.token.status == 0 || result.data.token.status == 8 || result.data.token.status == 9)) {
-				let status = result.data.token.status;
+			else if (mustLogin && loginToken && (loginToken.status == 0 || loginToken.status == 8 || loginToken.status == 9)) {
+				let status = loginToken.status;
 				return PassportBiz.loginStatusHandler(method, status);
 			}
 			else if (mustLogin && method == 'cancel') {
@@ -210,37 +221,6 @@ class PassportBiz extends BaseBiz {
 		cacheHelper.remove(constants.CACHE_TOKEN);
 	}
 
-	// 手机号码
-	static async getPhone(e, that) {
-		if (e.detail.errMsg == "getPhoneNumber:ok") {
-
-			let cloudID = e.detail.cloudID;
-			let params = {
-				cloudID
-			};
-			let opt = {
-				title: '手机验证中'
-			};
-			await cloudHelper.callCloudSumbit('passport/phone', params, opt).then(res => {
-				let phone = res.data;
-				if (!phone || phone.length < 11)
-					wx.showToast({
-						title: '手机号码获取失败，请重新填写手机号码',
-						icon: 'none',
-						duration: 2000
-					});
-				else {
-					that.setData({
-						formMobile: phone
-					});
-				}
-			});
-		} else
-			wx.showToast({
-				title: '手机号码获取失败，请重新填写手机号码',
-				icon: 'none'
-			});
-	}
 }
 
 
@@ -248,7 +228,6 @@ class PassportBiz extends BaseBiz {
 /** 表单校验    */
 PassportBiz.CHECK_FORM = {
 	name: 'formName|must|string|min:1|max:30|name=昵称',
-	mobile: 'formMobile|must|len:11|name=手机',
 	forms: 'formForms|array'
 };
 

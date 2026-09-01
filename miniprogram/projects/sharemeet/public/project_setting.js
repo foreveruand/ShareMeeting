@@ -10,7 +10,7 @@ module.exports = { //共享会议室预定
 	],
 
 	// 用户
-	USER_REG_CHECK: false,
+	USER_REG_CHECK: true,
 	USER_FIELDS: [
 		{ mark: 'department', title: '所在部门', type: 'text', must: false },
 	],
@@ -31,7 +31,6 @@ module.exports = { //共享会议室预定
 		{ id: 4, title: 'D区' },
 	],
 	ENROLL_FIELDS: [
-		{ mark: 'cover', title: '封面图片', type: 'image', min: 1, max: 1, must: true },
 		{ mark: 'person', title: '最大容纳人数', type: 'text', must: true },
 		{ mark: 'tools', title: '设施情况', type: 'checkbox', selectOptions: ['白板', '投影仪', '话筒', '音箱'], checkBoxLimit: 1, must: false },
 	],

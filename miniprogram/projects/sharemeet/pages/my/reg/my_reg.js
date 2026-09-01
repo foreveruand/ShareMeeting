@@ -4,7 +4,6 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const validate = require('../../../../../helper/validate.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const projectSetting = require('../../../public/project_setting.js');
-const setting = require('../../../../../setting/setting.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 
 Page({
@@ -15,7 +14,7 @@ Page({
 		isLoad: false,
 		isEdit: false,
 
-		mobileCheck: setting.MOBILE_CHECK
+		userRegCheck: projectSetting.USER_REG_CHECK
 	},
 
 	/**
@@ -45,7 +44,6 @@ Page({
 			fields: projectSetting.USER_FIELDS,
 
 			formName: '',
-			formMobile: '',
 			formForms: []
 		});
 	},
@@ -91,11 +89,6 @@ Page({
 
 	},
 
-	bindGetPhoneNumber: async function (e) {
-		PassportBiz.getPhone(e, this);
-	},
-
-
 	bindSubmitTap: async function (e) {
 		try {
 			let data = this.data;
@@ -108,16 +101,13 @@ Page({
 			if (!forms) return;
 			data.forms = forms;
 
-			data.status = projectSetting.USER_REG_CHECK ? 0 : 1;
-
 			let opts = {
 				title: '提交中'
 			}
 			await cloudHelper.callCloudSumbit('passport/register', data, opts).then(result => {
 				if (result && helper.isDefined(result.data.token) && result.data.token) {
 
-					// 用户需要审核，不能登录
-					if (!projectSetting.USER_REG_CHECK) PassportBiz.setToken(result.data.token);
+					PassportBiz.setToken(result.data.token);
 
 					let callback = () => {
 						if (this.data.retUrl == 'back')

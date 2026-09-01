@@ -2,6 +2,7 @@ const pageHelper = require('../../../../../helper/page_helper.js');
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const EnrollBiz = require('../../../biz/enroll_biz.js');
+const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 
 Page({
 	/**
@@ -21,7 +22,7 @@ Page({
 
 		if (!pageHelper.getOptions(this, options)) return;
 
-		//if (!await PassportBiz.loginMustBackWin(this)) return;
+		if (!await PassportBiz.loginMustBackWin(this)) return;
 
 		this._loadDetail();
 

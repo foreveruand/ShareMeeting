@@ -23,40 +23,36 @@
  
 </view>
  
- <!--
 <view class="form-box shadow">
 	<view class="form-group" id="formCheckSet">
-		<view class="title must text-orange">审核设置</view>
-		<cmpt-picker mark="cancelSet" style="flex:1" model:item="{{formCheckSet}}" sourceDataStr="0=预约后不需要后台审核,1=预约后需要后台审核" />
+		<view class="title text-orange">预约生效方式</view>
+		<view class="text-grey">已审核用户提交预约后立即生效</view>
 	</view>
-	<view wx:if="{{formCheckSetFocus}}" class="hint-desc error">{{formCheckSetFocus}}</view>
 
 	<view class="form-group" id="formCancelSet">
 		<view class="title must">取消设置</view> 
-		<cmpt-picker mark="cancelSet" style="flex:1" model:item="{{formCancelSet}}" sourceDataStr="0=不可取消,1=随时可取消,2=截止前可取消,3=审核通过后不可取消" /> 
+	<cmpt-picker mark="cancelSet" style="flex:1" model:item="{{formCancelSet}}" sourceDataStr="0=不可取消,1=随时可取消,3=审核通过后不可取消" />
 	</view> 
 	<view wx:if="{{formCancelSetFocus}}" class="hint-desc error">{{formCancelSetFocus}}</view> 
 
 	<view class="form-group" id="formEditSet">
 		<view class="title must">修改设置<text class="text-grey text-normal margin-left-xs">(填写人修改资料)</text></view>
-		<cmpt-picker mark="editSet" style="flex:1" model:item="{{formEditSet}}" sourceDataStr="0=不可修改,1=随时可修改,2=截止前可修改,3=审核通过后不可修改" /> 
+	<cmpt-picker mark="editSet" style="flex:1" model:item="{{formEditSet}}" sourceDataStr="0=不可修改,1=随时可修改,3=审核通过后不可修改" />
 	</view>  
 	<view wx:if="{{formEditSetFocus}}" class="hint-desc error">{{formEditSetFocus}}</view> 
 
-</view>-->
+</view>
 
 <view class="form-box shadow margin-top-xs">
 	<cmpt-form-show id="cmpt-form" mark="cmpt-form" source="admin" isCacheMatch="{{false}}" fields="{{fields}}" forms="{{formForms}}" isDefMatch="{{id?false:true}}">
 	</cmpt-form-show>
 </view>
 
-<!--
 <view class="form-box shadow">
 	<view class="form-group">
 		<view class="title must">用户填写资料设置 <text class="text-grey text-normal">(共{{formJoinForms.length}}个字段)</text></view>
 	</view>
-	<cmpt-form-set id="form-set" bind:formset="bindJoinFormsCmpt" fields="{{formJoinForms}}" />
-</view>-->
+</view>
 
 
 <button bindtap="bindFormSubmit" class="btn-admin margin-top-xs">提交</button>
