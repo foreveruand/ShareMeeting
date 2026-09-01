@@ -35,7 +35,7 @@
 ### 自有服务器部署
 
 - 复制 `.env.example` 为 `.env`，配置微信小程序的 `WECHAT_APP_ID`、`WECHAT_APP_SECRET` 和初始管理员账号。
-- 安装依赖后运行 `npm start`。生产环境必须使用 HTTPS，并将服务地址填入 `miniprogram/setting/setting.js` 的 `API_BASE_URL`。
+- 生产部署、HTTPS、systemd、微信合法域名和备份步骤见 [deployment.md](deployment.md)。
 - 自有服务器模式提供会议室管理、预约记录管理、微信登录和 SQLite 数据存储；小程序管理员可创建、编辑、启停或删除会议室，并处理预约记录。
 
 
@@ -65,4 +65,3 @@
 ![image](https://user-images.githubusercontent.com/89234210/194038840-26720be8-5a8e-4f83-bb71-0fe4c95813cd.png)
 
 ![image](https://user-images.githubusercontent.com/89234210/194038795-c6aa41f8-a0f1-4be4-accf-3c29c7834c9f.png)
-
