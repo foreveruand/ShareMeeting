@@ -14,7 +14,16 @@ Page({
 		isLogin: true,
 
 		isEdit: true,
+		isLoadTime: false,
 
+		day: '',
+		start: '',
+		end: '',
+		endPoint: '',
+		initialStart: '',
+		initialEnd: '',
+		initialEndPoint: '',
+		used: [],
 		forms: [],
 	},
 
@@ -55,11 +64,41 @@ Page({
 
 		if (!Array.isArray(enroll.ENROLL_JOIN_FORMS) || enroll.ENROLL_JOIN_FORMS.length == 0)
 			enroll.ENROLL_JOIN_FORMS = projectSetting.ENROLL_JOIN_FIELDS;
+		if (!enroll.join) {
+			this.setData({ isLoad: null });
+			return;
+		}
 
 		this.setData({
 			isLoad: true,
 			enroll,
+			day: enroll.join.day,
+			start: enroll.join.start,
+			end: enroll.join.end,
+			endPoint: enroll.join.endPoint,
+			initialStart: enroll.join.start,
+			initialEnd: enroll.join.end,
+			initialEndPoint: enroll.join.endPoint,
 		});
+		this._loadDayData(enroll.join.day);
+
+	},
+
+	_loadDayData: async function (day) {
+		if (!day) return;
+		this.setData({ isLoadTime: false });
+		let params = {
+			enrollId: this.data.id,
+			enrollJoinId: this.data.enrollJoinId,
+			day,
+		};
+		let opts = { title: 'bar' };
+		try {
+			let result = await cloudHelper.callCloudSumbit('enroll/day', params, opts);
+			this.setData({ isLoadTime: true, used: result.data });
+		} catch (err) {
+			console.error(err);
+		}
 
 	},
 
@@ -114,7 +153,32 @@ Page({
 	},
 
 	bindCheckTap: async function (e) {
+		if (!this.data.day || !this.data.start || !this.data.end || !this.data.endPoint)
+			return pageHelper.showModal('请选择预约时段');
 		this.selectComponent("#form-show").checkForms();
+	},
+
+	bindDateSelectCmpt: function (e) {
+		let day = e.detail;
+		this.setData({
+			day,
+			start: '',
+			end: '',
+			endPoint: '',
+			initialStart: '',
+			initialEnd: '',
+			initialEndPoint: '',
+		}, () => {
+			this._loadDayData(day);
+		});
+	},
+
+	bindTimeSelectCmpt: function (e) {
+		this.setData({
+			start: e.detail.start,
+			end: e.detail.end,
+			endPoint: e.detail.endPoint,
+		});
 	},
 
 	bindSubmitCmpt: async function (e) {
@@ -129,15 +193,24 @@ Page({
 			let params = {
 				enrollId: this.data.id,
 				enrollJoinId,
+				day: this.data.day,
+				start: this.data.start,
+				end: this.data.end,
+				endPoint: this.data.endPoint,
 				forms
 			}
 			await cloudHelper.callCloudSumbit('enroll/join_edit', params, opts).then(res => { 
 				let callback = () => {
 					// 更新列表页面数据
+					let nameForm = dataHelper.getDataByKey(forms, 'mark', 'name');
 					let node = {
 						'ENROLL_JOIN_OBJ': {
-							'name': dataHelper.getDataByKey(forms, 'mark', 'name').val,
-						}
+							'name': nameForm ? nameForm.val : '',
+						},
+						'ENROLL_JOIN_DAY_DESC': this.data.day.replace(/-/g, '.'),
+						'ENROLL_JOIN_START': this.data.start,
+						'ENROLL_JOIN_END': this.data.end,
+						'ENROLL_JOIN_END_POINT': this.data.endPoint,
 					}
 					pageHelper.modifyPrevPageListNodeObject(enrollJoinId, node);
 

@@ -8,13 +8,6 @@
 	</view>
 	<view wx:if="{{formTitleFocus}}" class="hint-desc error">{{formTitleFocus}}</view>
 
-
-	<view wx:if="{{cateIdOptions.length>1}}" class="form-group arrow" id="formCateId">
-		<view class="title must">分类</view>
-		<cmpt-picker id="cate-picker" sourceData="{{cateIdOptions}}" bind:select="url" data-type="picker" data-item="formCateId" item="{{formCateId}}"> </cmpt-picker>
-	</view>
-	<view wx:if="{{formCateIdFocus}}" class="hint-desc error">{{formCateIdFocus}}</view>
-
 	<view class="form-group">
 		<view class="title must">排序号<text class="text-grey text-normal margin-left-xs">(小的先显示)</text></view>
 		<input placeholder="排序号，小的先显示" type="number" placeholder-class="phc" model:value="{{formOrder}}" focus="{{formOrderFocus}}" maxlength="4"></input>

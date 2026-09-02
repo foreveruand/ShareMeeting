@@ -38,7 +38,7 @@ Page({
 	 * 生命周期函数--监听页面显示
 	 */
 	onShow: async function () {  
-		await PassportBiz.loginSilenceMust(this);
+		if (!await PassportBiz.loginSilence(this)) return;
 		await this._loadUser();
 	},
 
@@ -57,21 +57,30 @@ Page({
 	},
 
 	_loadUser: async function (e) {
+		if (this._loadUserPromise) return this._loadUserPromise;
 
+		this._loadUserPromise = this._loadUserOnce();
+		try {
+			return await this._loadUserPromise;
+		} finally {
+			this._loadUserPromise = null;
+		}
+	},
+
+	_loadUserOnce: async function () {
 		let opts = {
 			title: 'bar'
+		};
+		try {
+			let result = await cloudHelper.callCloudSumbit('passport/my_detail', {}, opts);
+			let user = result.data;
+			this.setData({ user: user || null });
+		} catch (err) {
+			if (err && err.code == 1401 && await PassportBiz.loginSilence(this)) {
+				return this._loadUserOnce();
+			}
+			this.setData({ user: null });
 		}
-		let user = await cloudHelper.callCloudData('passport/my_detail', {}, opts);
-		if (!user) {
-			this.setData({
-				user: null
-			});
-			return;
-		}
-
-		this.setData({
-			user
-		})
 	},
 
 	/**

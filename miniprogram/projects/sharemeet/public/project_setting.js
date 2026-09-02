@@ -24,12 +24,6 @@ module.exports = { //共享会议室预定
 	],
 
 	ENROLL_NAME: '会议室',
-	ENROLL_CATE: [
-		{ id: 1, title: 'A区' },
-		{ id: 2, title: 'B区' },
-		{ id: 3, title: 'C区' },
-		{ id: 4, title: 'D区' },
-	],
 	ENROLL_FIELDS: [
 		{ mark: 'person', title: '最大容纳人数', type: 'text', must: true },
 		{ mark: 'tools', title: '设施情况', type: 'checkbox', selectOptions: ['白板', '投影仪', '话筒', '音箱'], checkBoxLimit: 1, must: false },
@@ -38,7 +32,7 @@ module.exports = { //共享会议室预定
 		{ mark: 'name', type: 'text', title: '会议名称', must: true, max: 30, edit: false },
 		{ mark: 'desc', type: 'textarea', title: '会议描述', must: false, max: 100, edit: false },
 		{ mark: 'person', type: 'text', title: '预订人', must: true, max: 30, edit: false },
-		{ mark: 'tel', type: 'mobile', title: '联系电话', must: true, edit: false },
+		{ mark: 'tel', type: 'mobile', title: '联系电话', must: false, edit: false },
 	],
 
 }

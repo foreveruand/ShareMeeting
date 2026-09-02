@@ -1,0 +1,18 @@
+[Unit]
+Description=ShareMeeting API
+After=network.target
+
+[Service]
+Type=simple
+User=sharemeet
+Group=sharemeet
+WorkingDirectory=/opt/share-meeting
+EnvironmentFile=/opt/share-meeting/.env
+ExecStart=/usr/bin/node server/src/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

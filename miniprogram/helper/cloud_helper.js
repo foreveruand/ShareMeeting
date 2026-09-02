@@ -118,6 +118,8 @@ function callCloud(route, params = {}, options) {
 
 				if (result.code == CODE.LOGIC || result.code == CODE.DATA || result.code == 1401 || result.code == 1403) {
 					console.log(result)
+					if (isSelfHosted && result.code == 1401)
+						cacheHelper.remove(constants.CACHE_TOKEN);
 					// 逻辑错误&数据校验错误 
 					if (hint) {
 						wx.showModal({

@@ -1,5 +1,4 @@
 const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
-const EnrollBiz = require('../../../../biz/enroll_biz.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js');
 const projectSetting = require('../../../../public/project_setting.js');
@@ -306,18 +305,7 @@ Page({
 	},
 
 	_getSearchMenu: function () {
-		let cateIdOptions = EnrollBiz.getCateList();
-
-		let sortItem1 = [{ label: '分类', type: '', value: 0 }];
-		sortItem1 = sortItem1.concat(cateIdOptions);
-
-		let sortItem2 = [
-
-		];
-
 		let sortItems = [];
-		if (sortItem1.length > 2) sortItems.push(sortItem1);
-
 
 		let sortMenus = [
 			{ label: '全部', type: '', value: '' },
@@ -328,7 +316,6 @@ Page({
 		]
 		this.setData({
 			search: '',
-			cateIdOptions,
 			sortItems,
 			sortMenus,
 			isLoad: true

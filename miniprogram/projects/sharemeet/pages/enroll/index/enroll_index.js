@@ -1,16 +1,12 @@
 const ProjectBiz = require('../../../biz/project_biz.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
-const EnrollBiz = require('../../../biz/enroll_biz.js');
-const projectSetting = require('../../../public/project_setting.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 
 Page({
 	/**
 	 * 页面的初始数据
 	 */
-	data: {
-		isShowCate: projectSetting.ENROLL_CATE.length > 1
-	},
+	data: {},
 
 	/**
 		 * 生命周期函数--监听页面加载
@@ -19,24 +15,7 @@ Page({
 		ProjectBiz.initPage(this);
 		if (!await PassportBiz.loginMustBackWin(this)) return;
 
-		this._getSearchMenu();
-
-		if (options && options.id) {
-			this.setData({
-				_params: {
-					sortType: 'cateId',
-					sortVal: options.id,
-				}
-			});
-		} else {
-			this.setData({
-
-				_params: {
-					sortType: 'cateId',
-					sortVal: '',
-				}
-			});
-		}
+		this.setData({ _params: {} });
 	},
 
 	/**
@@ -75,26 +54,6 @@ Page({
 
 
 	onShareAppMessage: function () {
-
-	},
-
-	_getSearchMenu: function () {
-		EnrollBiz.setCateTitle();
-
-		let sortItem1 = [{
-			label: '全部',
-			type: 'cateId',
-			value: ''
-		}];
-
-		sortItem1 = sortItem1.concat(EnrollBiz.getCateList());
-
-		let sortItems = [];
-		let sortMenus = sortItem1;
-		this.setData({
-			sortItems,
-			sortMenus
-		})
 
 	},
 

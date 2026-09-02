@@ -1,7 +1,6 @@
 const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
 const AdminEnrollBiz = require('../../../../biz/admin_enroll_biz.js');
-const EnrollBiz = require('../../../../biz/enroll_biz.js');
 const validate = require('../../../../../../helper/validate.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js'); 
 const formSetHelper = require('../../../../../../cmpts/public/form/form_set_helper.js');
@@ -91,7 +90,6 @@ Page({
 			isLoad: true,
 
 			formTitle: enroll.ENROLL_TITLE,
-			formCateId: enroll.ENROLL_CATE_ID,
 			formOrder: enroll.ENROLL_ORDER,
 
 		 
@@ -121,8 +119,6 @@ Page({
 		if (!forms) return;
 		data.forms = forms;
 
-		data.cateName = EnrollBiz.getCateName(data.cateId);
-
 		try {
 			let enrollId = this.data.id;
 			data.id = enrollId;
@@ -132,7 +128,6 @@ Page({
 				// 更新列表页面数据
 				let node = {
 					'ENROLL_TITLE': data.title,
-					'ENROLL_CATE_NAME': data.cateName,
 					'ENROLL_ORDER': data.order, 
 					'ENROLL_CHECK_SET': data.checkSet,
 					'ENROLL_CANCEL_SET': data.cancelSet,

@@ -16,3 +16,7 @@ node_modules/
 # Self-hosted server runtime data and secrets
 .env
 server/data/
+
+# WeChat Developer Tools and Mini Program local configuration
+project.private.config.json
+miniprogram/setting/setting.local.js

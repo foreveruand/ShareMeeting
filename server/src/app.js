@@ -19,6 +19,8 @@ const RESERVATION_STATUS = {
 
 const USER_SESSION_SECONDS = 7 * 24 * 60 * 60;
 const ADMIN_SESSION_SECONDS = 8 * 60 * 60;
+const DEFAULT_ROOM_CATEGORY_ID = "default";
+const DEFAULT_ROOM_CATEGORY_NAME = "";
 
 function parseJson(value, fallback) {
   try {
@@ -64,7 +66,7 @@ function toRoom(room) {
     ENROLL_VOUCH: room.is_featured,
     ENROLL_FORMS: parseJson(room.forms_json, []),
     ENROLL_OBJ: parseJson(room.room_data_json, {}),
-    ENROLL_JOIN_FORMS: parseJson(room.reservation_forms_json, []),
+    ENROLL_JOIN_FORMS: normalizeReservationFields(parseJson(room.reservation_forms_json, [])),
     ENROLL_QR: room.qr_url,
     ENROLL_VIEW_CNT: room.view_count,
   };
@@ -93,6 +95,14 @@ function formsToObject(forms) {
     if (form && typeof form.mark === "string") result[form.mark] = form.val;
     return result;
   }, {});
+}
+
+function reservationTitle(formsJson) {
+  const forms = parseJson(formsJson, []);
+  const form = Array.isArray(forms) ? forms.find((item) => item && item.mark === "name") : null;
+  if (!form || form.val === undefined || form.val === null) return "已预约";
+  const title = String(form.val).trim();
+  return title || "已预约";
 }
 
 function asRequiredString(value, fieldName, maxLength = 200) {
@@ -124,6 +134,25 @@ function asIntegerInRange(value, fieldName, minimum, maximum) {
 function asForms(value) {
   if (!Array.isArray(value) || value.length > 30) throw new ApiError("表单格式错误");
   return value;
+}
+
+function normalizeReservationFields(fields) {
+  const normalizedFields = Array.isArray(fields) ? fields : [];
+  return normalizedFields.map((field) => {
+    if (!field || typeof field !== "object" || field.mark !== "tel") return field;
+    return { ...field, must: false };
+  });
+}
+
+function validateReservationForms(forms) {
+  return asForms(forms).map((form) => {
+    if (!form || typeof form !== "object") throw new ApiError("表单格式错误");
+    if (form.mark !== "tel") return form;
+
+    const value = form.val === undefined || form.val === null ? "" : String(form.val).trim();
+    if (value && !/^1\d{10}$/.test(value)) throw new ApiError("联系电话格式错误");
+    return { ...form, val: value };
+  });
 }
 
 function asDay(value) {
@@ -270,13 +299,11 @@ function createApp({ database, wechatClient }) {
       case "enroll/list": {
         requireApprovedUser(request);
         const search = typeof params.search === "string" ? params.search.trim() : "";
-        const categoryId = params.sortType === "cateId" ? String(params.sortVal || "") : "";
         let rooms = database
           .prepare("SELECT * FROM rooms WHERE status = 1 ORDER BY sort_order ASC, created_at DESC")
           .all();
 
         if (search) rooms = rooms.filter((room) => room.title.includes(search));
-        if (categoryId) rooms = rooms.filter((room) => room.category_id === categoryId);
         return paginate(rooms.map(toRoom), params);
       }
       case "enroll/view": {
@@ -303,20 +330,33 @@ function createApp({ database, wechatClient }) {
         return response;
       }
       case "enroll/day": {
-        requireApprovedUser(request);
+        const user = requireApprovedUser(request);
         const roomId = asRequiredString(params.enrollId, "会议室", 100);
         const day = asDay(params.day);
         requireRoom(roomId);
+        let ignoredReservationId = "";
+        if (params.enrollJoinId) {
+          ignoredReservationId = asRequiredString(params.enrollJoinId, "预约记录", 100);
+          const reservation = database
+            .prepare("SELECT id FROM reservations WHERE id = ? AND room_id = ? AND user_id = ?")
+            .get(ignoredReservationId, roomId, user.id);
+          if (!reservation) throw new ApiError("预约记录不存在或无权访问");
+        }
 
         return database
           .prepare(
-            `SELECT start_time, end_time
+            `SELECT reservations.start_time, reservations.end_time, reservations.forms_json
              FROM reservations
-             WHERE room_id = ? AND day = ? AND status IN (?, ?)
-             ORDER BY start_time ASC`,
+             WHERE reservations.room_id = ? AND reservations.day = ?
+               AND reservations.status IN (?, ?) AND reservations.id <> ?
+             ORDER BY reservations.start_time ASC`,
           )
-          .all(roomId, day, RESERVATION_STATUS.PENDING, RESERVATION_STATUS.APPROVED)
-          .map((reservation) => ({ start: reservation.start_time, end: reservation.end_time }));
+          .all(roomId, day, RESERVATION_STATUS.PENDING, RESERVATION_STATUS.APPROVED, ignoredReservationId)
+          .map((reservation) => ({
+            start: reservation.start_time,
+            end: reservation.end_time,
+            title: reservationTitle(reservation.forms_json),
+          }));
       }
       case "enroll/all_has_day": {
         requireApprovedUser(request);
@@ -354,7 +394,7 @@ function createApp({ database, wechatClient }) {
         const response = {
           _id: room.id,
           ENROLL_TITLE: room.title,
-          ENROLL_JOIN_FORMS: parseJson(room.reservation_forms_json, []),
+          ENROLL_JOIN_FORMS: normalizeReservationFields(parseJson(room.reservation_forms_json, [])),
           myForms: [],
         };
         if (params.enrollJoinId) {
@@ -384,7 +424,7 @@ function createApp({ database, wechatClient }) {
         if (dateTimeToMillis(day, startTime) >= dateTimeToMillis(day, endPoint)) {
           throw new ApiError("结束时间必须晚于开始时间");
         }
-        const forms = asForms(params.forms);
+        const forms = validateReservationForms(params.forms);
         assertReservationWindowIsAvailable(room.id, day, startTime, endPoint);
 
         const now = Date.now();
@@ -479,14 +519,37 @@ function createApp({ database, wechatClient }) {
         if (!room.edit_setting || (room.edit_setting === 3 && reservation.status === RESERVATION_STATUS.APPROVED)) {
           throw new ApiError("该预约不允许修改");
         }
-        const forms = asForms(params.forms);
-        const now = Date.now();
-        database
-          .prepare(
-            `UPDATE reservations SET forms_json = ?, reservation_data_json = ?, last_updated_at = ?, updated_at = ?
-             WHERE id = ?`,
-          )
-          .run(JSON.stringify(forms), JSON.stringify(formsToObject(forms)), now, now, reservation.id);
+        const day = asDay(params.day);
+        const startTime = asTime(params.start, "开始时间");
+        const endTime = asTime(params.end, "结束时间");
+        const endPoint = asTime(params.endPoint, "结束时间");
+        if (dateTimeToMillis(day, startTime) >= dateTimeToMillis(day, endPoint)) {
+          throw new ApiError("结束时间必须晚于开始时间");
+        }
+        const forms = validateReservationForms(params.forms);
+        const updateReservation = database.transaction(() => {
+          assertReservationWindowIsAvailable(room.id, day, startTime, endPoint, reservation.id);
+          const now = Date.now();
+          database
+            .prepare(
+              `UPDATE reservations
+               SET day = ?, start_time = ?, end_time = ?, end_point = ?, forms_json = ?,
+                   reservation_data_json = ?, last_updated_at = ?, updated_at = ?
+               WHERE id = ?`,
+            )
+            .run(
+              day,
+              startTime,
+              endTime,
+              endPoint,
+              JSON.stringify(forms),
+              JSON.stringify(formsToObject(forms)),
+              now,
+              now,
+              reservation.id,
+            );
+        });
+        updateReservation();
         return null;
       }
       case "enroll/my_join_cancel": {
@@ -586,9 +649,6 @@ function createApp({ database, wechatClient }) {
         let rooms = database.prepare("SELECT * FROM rooms ORDER BY sort_order ASC, created_at DESC").all();
 
         if (search) rooms = rooms.filter((room) => room.title.includes(search));
-        if (sortType === "cateId" && sortValue !== undefined) {
-          rooms = rooms.filter((room) => room.category_id === String(sortValue));
-        }
         if (sortType === "status" && [0, 1].includes(Number(sortValue))) {
           rooms = rooms.filter((room) => room.status === Number(sortValue));
         }
@@ -850,11 +910,12 @@ function userStatusDescription(status) {
 
 function getRoomInput(params) {
   const forms = asForms(params.forms || []);
-  const reservationForms = asForms(params.joinForms || []);
+  const reservationForms = normalizeReservationFields(asForms(params.joinForms || []));
   return {
     title: asRequiredString(params.title, "会议室名称", 50),
-    categoryId: asRequiredString(String(params.cateId || ""), "分类", 50),
-    categoryName: asOptionalString(params.cateName, "分类", 50),
+    // Categories are no longer part of the UI, but this keeps the legacy non-null schema intact.
+    categoryId: DEFAULT_ROOM_CATEGORY_ID,
+    categoryName: DEFAULT_ROOM_CATEGORY_NAME,
     sortOrder: asIntegerInRange(params.order, "排序号", 0, 9999),
     approvalRequired: 0,
     cancelSetting: [0, 1, 2, 3].includes(Number(params.cancelSet)) ? Number(params.cancelSet) : 1,

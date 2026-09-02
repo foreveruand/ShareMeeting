@@ -10,5 +10,5 @@
 </view>
 <view style="height: 150rpx;"></view>
 <view bindtap="bindSumbitTap" wx:if="{{selectedStart&&selectedEnd&&selectedEndPoint}}" class="time-submit safe-bottom ">
-	<view class="inner bg-project">确认预约 ({{selectedStart}}~{{selectedEndPoint}})</view>
+	<view class="inner bg-project">{{submitText}} ({{selectedStart}}~{{selectedEndPoint}})</view>
 </view>

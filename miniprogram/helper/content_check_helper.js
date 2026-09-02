@@ -73,9 +73,10 @@ async function imgCheckCloud(path, opt) {
  * @param {*} imgData 
  */
 async function imgCheck(imgData) { 
+	if (!setting.CONTENT_CHECK_SERVICE_ID) return false;
 
 	let result = await wx.serviceMarket.invokeService({
-		service: 'wxee446d7507c68b11',
+		service: setting.CONTENT_CHECK_SERVICE_ID,
 		api: 'imgSecCheck',
 		data: {
 			"Action": "ImageModeration",

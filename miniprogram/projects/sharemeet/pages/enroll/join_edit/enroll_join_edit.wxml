@@ -1,1 +1,25 @@
-<include src="../join/enroll_join.wxml" />
+<view wx:if="{{isLoad===null}}" class="margin-top load notexist text-l load-project"></view>
+<view wx:if="{{isLoad===false}}" class="margin-top load loading text-l load-project"></view>
+
+<view wx:if="{{isLoad&&isLogin}}">
+	<view class="date-fixed">
+		<date_select selected="{{day}}" bind:select="bindDateSelectCmpt"></date_select>
+		<view class="day-title text-cut">{{enroll.ENROLL_TITLE}}</view>
+	</view>
+	<view class="day-mask"></view>
+
+	<view wx:if="{{!isLoadTime}}" class="margin-top-xxl load loading text-l load-project"></view>
+	<time_select wx:if="{{isLoadTime}}" day="{{day}}" startTimeStep="14" endTimeStep="43" used="{{used}}" initialStart="{{initialStart}}" initialEnd="{{initialEnd}}" initialEndPoint="{{initialEndPoint}}" submitText="确认时段" bind:select="bindTimeSelectCmpt"></time_select>
+
+	<view class="main padding-project">
+		<view class="article-box">
+			<view class="form-box card-project shadow-project">
+				<view class="form-group">
+					<view class="line-desc">请您填写资料，带<text class="text-red text-bold">*</text>号为必填项</view>
+				</view>
+				<cmpt-form-show isConfirm="{{true}}" isCacheMatch="{{false}}" id="form-show" mark="enroll-form-show" forms="{{enroll.myForms}}" fields="{{enroll.ENROLL_JOIN_FORMS}}" bind:submit="bindSubmitCmpt" />
+			</view>
+		</view>
+		<button bindtap="bindCheckTap" class="btn-base btn-project" style="margin-bottom:100rpx;">提交</button>
+	</view>
+</view>

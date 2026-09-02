@@ -1,7 +1,6 @@
 const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
 const AdminEnrollBiz = require('../../../../biz/admin_enroll_biz.js');
-const EnrollBiz = require('../../../../biz/enroll_biz.js');
 const validate = require('../../../../../../helper/validate.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js');
 const PublicBiz = require('../../../../../../comm/biz/public_biz.js');
@@ -70,8 +69,6 @@ Page({
 		let forms = this.selectComponent("#cmpt-form").getForms(true);
 		if (!forms) return;
 		data.forms = forms;
-
-		data.cateName = EnrollBiz.getCateName(data.cateId);
 
 		try {
 

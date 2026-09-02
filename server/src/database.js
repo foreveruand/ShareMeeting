@@ -48,7 +48,7 @@ function createDatabase(databasePath) {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       status INTEGER NOT NULL DEFAULT 1 CHECK (status IN (0, 1)),
-      category_id TEXT NOT NULL,
+      category_id TEXT NOT NULL DEFAULT 'default',
       category_name TEXT NOT NULL DEFAULT '',
       cancel_setting INTEGER NOT NULL DEFAULT 1,
       edit_setting INTEGER NOT NULL DEFAULT 1,

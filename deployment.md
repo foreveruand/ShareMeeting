@@ -31,10 +31,10 @@ sudo chown -R sharemeet:sharemeet /opt/share-meeting
 在 `/opt/share-meeting/.env` 创建配置。该文件已被 Git 忽略，权限应限制为管理员可读：
 
 ```dotenv
-PUBLIC_BASE_URL=https://meeting-api.example.com
+PUBLIC_BASE_URL=https://your-api.example.com
 HOST=127.0.0.1
 PORT=4000
-WECHAT_APP_ID=wx0000000000000000
+WECHAT_APP_ID=replace-with-wechat-app-id
 WECHAT_APP_SECRET=replace-with-the-real-app-secret
 INITIAL_ADMIN_USERNAME=meeting-admin
 INITIAL_ADMIN_PASSWORD=replace-with-a-password-of-at-least-12-characters
@@ -82,16 +82,19 @@ DNS 应将 `meeting-api.example.com` 解析到服务器公网地址。首次申�
 
 1. 在微信公众平台的“小程序后台 - 开发管理 - 开发设置”取得 AppID 和 AppSecret。
 2. 将 AppID、AppSecret 写入服务器 `.env` 的 `WECHAT_APP_ID`、`WECHAT_APP_SECRET`，然后执行 `sudo systemctl restart share-meeting`。
-3. 在小程序后台的“开发管理 - 开发设置 - 服务器域名”中，将 `https://meeting-api.example.com` 添加为 `request 合法域名`。发布版不能使用 IP 地址、HTTP 地址或非标准端口。
-4. 修改 `miniprogram/setting/setting.js`：
+3. 在小程序后台的“开发管理 - 开发设置 - 服务器域名”中，将服务的 HTTPS 地址添加为 `request 合法域名`。发布版不能使用 IP 地址、HTTP 地址或非标准端口。
+4. 配置仅保存在本地的微信小程序设置：
 
-```js
-USE_SELF_HOSTED: true,
-API_BASE_URL: "https://meeting-api.example.com",
+```bash
+cp miniprogram/setting/setting.local.example.js miniprogram/setting/setting.local.js
 ```
 
-5. 确认 `project.config.json` 中的 `appid` 与服务器配置的 `WECHAT_APP_ID` 属于同一个小程序。
-6. 使用微信开发者工具导入仓库根目录，完成微信登录、注册审核、管理员登录、会议室管理和预约测试后上传代码，并在小程序后台提交审核发布。
+编辑 `miniprogram/setting/setting.local.js`，填入服务的真实 HTTPS 地址并保持 `USE_SELF_HOSTED: true`。该文件已被 Git 忽略。如启用图片内容校验，还需填写 `CONTENT_CHECK_SERVICE_ID`；未配置时图片校验会拒绝上传。
+
+5. 在微信开发者工具中填写 AppID。工具会将其保存到根目录的 `project.private.config.json`，该文件已被 Git 忽略。确认它与服务器 `.env` 中的 `WECHAT_APP_ID` 属于同一个小程序。
+6. 确认 `setting.local.js` 的 `API_BASE_URL` 与此服务的公网 HTTPS 域名完全一致。不要将小程序指向旧实例或旧容器。
+7. 在部署目录执行 `npm test`，随后执行 `sudo systemctl restart share-meeting` 和 `sudo systemctl status share-meeting`。重启后从小程序依次验证个人资料、会议日历、我的预订、会议室详情、创建预约和修改预约；任一“当前自有服务器尚未迁移此功能”提示都表示线上进程未包含当前路由，须修复部署而非在前端忽略该错误。
+8. 使用微信开发者工具导入仓库根目录，完成微信登录、注册审核、管理员登录、会议室管理和预约测试后上传代码，并在小程序后台提交审核发布。
 
 开发者工具可临时关闭“校验合法域名”进行本地调试，但发布前必须恢复校验并配置正式 HTTPS 域名。
 

@@ -15,7 +15,7 @@
 	</view>
 
 
-	<cmpt-detail mode="right" doTop="{{false}}" doHome="{{true}}" doSlot="{{true}}" topBtnShow="{{topBtnShow}}" oid="{{enroll._id}}" cate="{{enroll.ENROLL_CATE_NAME}}" title="{{enroll.ENROLL_TITLE}}" cover="{{enroll.ENROLL_OBJ.cover[0]}}" qr="{{enroll.ENROLL_QR}}" desc="马上预定会议室" bg="{{skin.PROJECT_COLOR}}">
+	<cmpt-detail mode="right" doFav="{{false}}" doTop="{{false}}" doHome="{{true}}" doSlot="{{true}}" topBtnShow="{{topBtnShow}}" oid="{{enroll._id}}" cate="enroll" title="{{enroll.ENROLL_TITLE}}" cover="{{enroll.ENROLL_OBJ.cover[0]}}" qr="{{enroll.ENROLL_QR}}" desc="马上预定会议室" bg="{{skin.PROJECT_COLOR}}">
 
 	</cmpt-detail>
 

@@ -30,6 +30,22 @@ Component({
 			type: String,
 			value: 'first'
 		},
+		initialStart: {
+			type: String,
+			value: ''
+		},
+		initialEnd: {
+			type: String,
+			value: ''
+		},
+		initialEndPoint: {
+			type: String,
+			value: ''
+		},
+		submitText: {
+			type: String,
+			value: '确认预约'
+		},
 	},
 
 	/**
@@ -145,7 +161,18 @@ Component({
 				}
 			}
 
-			this.setData({ times });
+			let selectedStart = this.data.initialStart;
+			let selectedEnd = this.data.initialEnd;
+			let selectedEndPoint = this.data.initialEndPoint;
+			if (selectedStart && selectedEnd && selectedEndPoint) {
+				for (let k = 0; k < times.length; k++) {
+					if (times[k].start >= selectedStart && times[k].start <= selectedEnd) {
+						times[k].selected = true;
+					}
+				}
+			}
+
+			this.setData({ times, selectedStart, selectedEnd, selectedEndPoint });
 		},
 
 		bindSelectTap: function (e) {
@@ -182,10 +209,11 @@ Component({
 			if (selected >= selectedStart && selected <= selectedEnd) {
 				selectedStart = '';
 				selectedEnd = '';
+				let selectedEndPoint = '';
 				for (let k = 0; k < times.length; k++) {
 					times[k].selected = false;
 				}
-				this.setData({ times, selectedStart, selectedEnd });
+				this.setData({ times, selectedStart, selectedEnd, selectedEndPoint });
 				return;
 			}
 

@@ -1,7 +1,15 @@
+let localSetting = {};
+try {
+	localSetting = require('./setting.local.js');
+} catch (err) {
+	if (err.code !== 'MODULE_NOT_FOUND') throw err;
+}
+
 module.exports = {
-	// 使用自有 HTTPS 服务时设为 true。API 域名需要在小程序后台配置。
+	// Keep deployment-specific values in the ignored setting.local.js file.
 	USE_SELF_HOSTED: true,
-	API_BASE_URL: 'https://meeting-api.example.com',
+	API_BASE_URL: '',
+	CONTENT_CHECK_SERVICE_ID: '',
 
 	//### 环境相关 
 	CLOUD_ID: 'dev-5gf0o85o226fad1d', //云服务id ,本地测试环境 
@@ -24,4 +32,5 @@ module.exports = {
 	CACHE_IS_LIST: true, //列表是否缓存
 	CACHE_LIST_TIME: 60 * 30, //列表缓存时间秒    
 
+	...localSetting,
 }

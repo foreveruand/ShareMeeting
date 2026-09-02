@@ -117,16 +117,13 @@ class PassportBiz extends BaseBiz {
 			title: title || '登录中',
 		};
 
-		let loginRequest = setting.USE_SELF_HOSTED
-			? new Promise((resolve, reject) => {
-				wx.login({
-					success: result => result.code ? resolve(cloudHelper.loginWithWechatCode(result.code)) : reject(result),
-					fail: reject
-				});
-			})
-			: cloudHelper.callCloudSumbit('passport/login', {}, opt);
+		if (!PassportBiz.loginPromise) {
+			PassportBiz.loginPromise = PassportBiz._requestLogin(opt).finally(() => {
+				PassportBiz.loginPromise = null;
+			});
+		}
 
-		let res = await loginRequest.then(result => {
+		let res = await PassportBiz.loginPromise.then(result => {
 			PassportBiz.clearToken();
 			let loginToken = result && result.data ? result.data.token : null;
 			if (loginToken && loginToken.accessToken) PassportBiz.setToken(loginToken);
@@ -216,12 +213,26 @@ class PassportBiz extends BaseBiz {
 		return res;
 	}
 
+	// Share one WeChat exchange while several pages request authentication together.
+	static _requestLogin(opt) {
+		return setting.USE_SELF_HOSTED
+			? new Promise((resolve, reject) => {
+				wx.login({
+					success: result => result.code ? resolve(cloudHelper.loginWithWechatCode(result.code)) : reject(result),
+					fail: reject
+				});
+			})
+			: cloudHelper.callCloudSumbit('passport/login', {}, opt);
+	}
+
 	// 清除登录缓存
 	static clearToken() {
 		cacheHelper.remove(constants.CACHE_TOKEN);
 	}
 
 }
+
+PassportBiz.loginPromise = null;
 
 
 

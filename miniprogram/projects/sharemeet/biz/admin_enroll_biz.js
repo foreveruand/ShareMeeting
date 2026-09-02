@@ -5,22 +5,17 @@
  */
 
 const BaseBiz = require('../../../comm/biz/base_biz.js');
-const EnrollBiz = require('./enroll_biz.js');
 const projectSetting = require('../public/project_setting.js');
 const formSetHelper = require('../../../cmpts/public/form/form_set_helper.js');
 
 class AdminEnrollBiz extends BaseBiz {
 	static initFormData(id = '') {
-		let cateIdOptions = EnrollBiz.getCateList();
-
 		return {
 			id,
 
-			cateIdOptions,
 			fields: projectSetting.ENROLL_FIELDS,
 
 			formTitle: '',
-			formCateId: (cateIdOptions.length == 1) ? cateIdOptions[0].val : '',
 			formOrder: 9999,
 
 			formMaxCnt: '',
@@ -41,7 +36,6 @@ class AdminEnrollBiz extends BaseBiz {
 
 AdminEnrollBiz.CHECK_FORM = {
 	title: 'formTitle|must|string|min:2|max:50|name=会议室名称',
-	cateId: 'formCateId|must|id|name=分类',
 	order: 'formOrder|must|int|min:0|max:9999|name=排序号',   
 	checkSet: 'formCheckSet|must|int|name=审核设置',
 	cancelSet: 'formCancelSet|must|int|name=取消设置',
